@@ -9,10 +9,10 @@ export const jwtCheck = expressjwt({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
-    jwksUri: `https://dev-3dmvhxpk5h27gflm.us.auth0.com/.well-known/jwks.json`,
+    jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
   }),
   audience: 'uniqueIdentifier',
-  issuer: 'https://dev-3dmvhxpk5h27gflm.us.auth0.com/',
+  issuer: `https://${process.env.AUTH0_DOMAIN}/`,
   algorithms: ['RS256']
 });
 
