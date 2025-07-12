@@ -1,35 +1,35 @@
 import express from 'express'
 import connectDB from './config/mongodb.js'
-import { auth } from 'express-openid-connect';
+import dotenv from "dotenv";
+import cors from 'cors'
+import { jwtCheck } from './middleware/auth.middleware.js';
+
+dotenv.config();
+
 
 const app = express()
 
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: 'a long, randomly-generated string stored in env',
-  baseURL: 'http://localhost:3000',
-  clientID: 'S2AeuMdKcVulnq3SpaS67BLzKnGlcdwN',
-  issuerBaseURL: 'https://dev-3dmvhxpk5h27gflm.us.auth0.com'
-};
-
-// auth router attaches /login, /logout, and /callback routes to the baseURL
-app.use(auth(config));
-
-// req.isAuthenticated is provided from the auth router
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
-});
+app.use(cors({origin: 'http://localhost:5173', credentials: true}))
 
 
+app.get('/protected', jwtCheck,(req, res) => {
+  res.send('This is a protected route')
+})
+
+app.use((req, res, next)=> {
+  const error = new Error('Not found')
+  error.status = 404
+  next(error)
+})
+
+app.use((error, req, res, next) => {
+  const status = error.status || 500;
+  const message = error.message || "Internal server error"
+  res.status(status).send(message)
+})
 
 
-
-// connectDB()
-
-
-
-const port = 3000
+const port = process.env.PORT || 3000
 app.listen(port, () => {
     console.log("Server is Up!!")
 })
