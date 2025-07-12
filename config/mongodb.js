@@ -7,7 +7,7 @@ const connectDB = async () => {
     try{
 
         mongoose.connection.on('connected', () => console.log('Database connected...'))
-        await mongoose.connect(`${process.env.mongodb_uri}/ecommerce-api`)
+        await mongoose.connect(`${process.env.mongodb_uri}/ecommerce`)
 
     }catch(err) {
         console.log("Mongodb connection failed...")
