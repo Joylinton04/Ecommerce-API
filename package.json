@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Joylinton04/Ecommerce-API#readme",
   "dependencies": {
+    "axios": "^1.10.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
