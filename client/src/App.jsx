@@ -11,22 +11,26 @@ const App = () => {
     logout,
     getAccessTokenSilently,
     isAuthenticated,
-    user
+    user,
+    isLoading
   } = useAuth0()
 
   async function callProtectedRoute() {
-      const token = await getAccessTokenSilently()
-      
-      try {
-        const response = await axios.get('http://localhost:3000/protected',{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-        console.log(response.data)
-      }catch(err) {
-        console.log(err)
-      }
+    const token = await getAccessTokenSilently({
+      audience: "uniqueIdentifier"
+    });
+
+
+    try {
+      const response = await axios.get('http://localhost:3000/protected', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      console.log(response.data)
+    } catch (err) {
+      console.log(err)
+    }
   }
 
 
@@ -46,16 +50,26 @@ const App = () => {
         <li><button onClick={() => logout()}>Logout</button></li>
       </ul>
 
-      <h1 style={{textAlign: 'center', marginTop: '4rem'}}>Welcome to our page</h1>
-      {isAuthenticated
-        && <h2 style={{textAlign: 'center'}}>User is logged</h2>}
-
-      {isAuthenticated && 
-        <p>{JSON.stringify(user)}</p>
+      <h1 style={{ textAlign: 'center', marginTop: '4rem' }}>Welcome to our page</h1>
+      {
+        isLoading ?
+          (<p>Loading user</p>)
+          :
+          (isAuthenticated
+            && <h2 style={{ textAlign: 'center' }}>User is logged in</h2>)
       }
 
 
-      <div style={{display: 'flex',alignItems: 'center', justifyContent: 'center',marginTop: '2rem'}}>
+      {isLoading ? (
+        <p style={{ textAlign: 'center' }}>Loading user...</p>
+      ) : (
+        isAuthenticated && user && (
+          <p style={{ textAlign: 'center' }}>{JSON.stringify(user)}</p>
+        )
+      )}
+
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '2rem' }}>
         <button onClick={() => callProtectedRoute()}>Protected route</button>
       </div>
     </div>
