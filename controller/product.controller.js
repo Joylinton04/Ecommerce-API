@@ -11,6 +11,7 @@ export const addProduct = async (req, res) => {
       subCateory,
       sizes,
       bestSeller,
+      stock,
       date,
     } = req.body;
 
@@ -35,6 +36,7 @@ export const addProduct = async (req, res) => {
       subCateory,
       sizes,
       bestSeller: bestSeller == "true" ? true : false,
+      stock,
       date: Date.now(),
       image: imageUrls,
     };
@@ -115,6 +117,7 @@ export const updateProduct = async (req, res) => {
     subCateory,
     sizes,
     bestSeller,
+    stock,
     date,
   } = req.body;
 
@@ -150,6 +153,7 @@ export const updateProduct = async (req, res) => {
       subCateory,
       sizes,
       bestSeller,
+      stock,
       date,
     };
 
