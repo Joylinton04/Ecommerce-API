@@ -31,7 +31,7 @@ export const verifyUser = async (req, res, next) => {
         },
       }
     );
-    req.user = response.data;
+    req.user = response.data.sub;
     next()
   } catch (err) {
     console.log(err);
