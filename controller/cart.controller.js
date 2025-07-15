@@ -19,11 +19,11 @@ export const addCart = async (req, res) => {
       return res.status(400).json({ message: "Not enough stock available" });
     }
 
-    const cart = await cartModel.findOne({ user: userId });
+    let cart = await cartModel.findOne({ user: userId });
     if (!cart) {
       const newCartItem = {
         user: userId,
-        item: [
+        items: [
           {
             product: productId,
             quantity: quantity,
@@ -31,29 +31,41 @@ export const addCart = async (req, res) => {
           },
         ],
       };
-      const newCart = new cartModel(newCartItem);
-      await newCart.save();
+      cart = new cartModel(newCartItem);
+      await cart.save();
+      return res.status(201).json({ success: true, cart: cart });
+    }
 
-    } else {
-      const itemIndex = cart.items.findIndex(
-        (item) => item.product === productId
-      );
-      if (itemIndex > -1) {
-        // update the quantity if the item exist
-        cart.items[itemIndex].quantity += 1;
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product === productId
+    );
+    if (itemIndex > -1) {
+      // Product exists — update quantity
+      const newQuantity = cart.items[itemIndex].quantity + quantity;
 
-        if (cart.items[itemIndex].quantity > product.stock) {
-          return res.status(400).json({
-            message: `Cannot add more than ${product.stock} of ${product.name} to cart.`,
-          });
-        }
+      if (newQuantity > product.stock) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot add more than ${product.stock} of ${product.name} to cart.`,
+        });
       }
+
+      cart.items[itemIndex].quantity = newQuantity;
+    } else {
+      // Product not in cart — push new item
+      cart.items.push({
+        product: productId,
+        quantity: quantity,
+        price: product.price,
+      });
     }
 
     cart.lastModified = Date.now();
     await cart.save();
+    console.log(cart)
 
-    res.status(200).json({ sucess: true, cart });
+    return res.status(200).json({ success: true, cart: cart });
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ success: false, message: "Internal server error" });
