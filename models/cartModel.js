@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 
 const CartItemSchema = new Schema({
     product: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
         required: true
     },
