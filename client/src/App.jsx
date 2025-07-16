@@ -17,7 +17,8 @@ const App = () => {
 
   async function callProtectedRoute() {
     const token = await getAccessTokenSilently({
-      audience: "uniqueIdentifier"
+      audience: "uniqueIdentifier",
+      scope: 'openid profile email offline_access',
     });
 
 
