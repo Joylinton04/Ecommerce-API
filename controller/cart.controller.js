@@ -142,11 +142,12 @@ export const clearCart = async (req, res) => {
 
 
 export const removeCartItem = async (req, res) => {
+  // get info from req
   const userId = req.user;
   const { productId } = req.body;
 
   try {
-    
+    // find cart 
     const cart = await cartModel.findOne({ user: userId})
     if (!cart) {
       return res
