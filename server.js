@@ -6,6 +6,7 @@ import cors from "cors";
 import productRoute from "./route/product.route.js";
 import { jwtCheck, verifyAdmin, verifyUser } from "./middleware/auth.middleware.js";
 import cartRoute from "./route/cart.route.js";
+import orderRoute from "./route/order.route.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ connectCloudinary();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
+app.use("/api/order", orderRoute);
 
 app.get("/", (req, res) => {
   res.send("API working...");
