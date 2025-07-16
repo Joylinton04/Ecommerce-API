@@ -60,7 +60,6 @@ export const addCart = async (req, res) => {
 
     cart.lastModified = Date.now();
     await cart.save();
-    console.log(cart);
 
     return res.status(200).json({ success: true, cart: cart });
   } catch (err) {
