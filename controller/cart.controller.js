@@ -25,7 +25,7 @@ export const addCart = async (req, res) => {
         user: userId,
         items: [
           {
-            product: productId,
+            productId: productId,
             quantity: quantity,
             price: product.price,
           },
@@ -52,7 +52,7 @@ export const addCart = async (req, res) => {
     } else {
       // Product not in cart — push new item
       cart.items.push({
-        product: productId,
+        productId: productId,
         quantity: quantity,
         price: product.price,
       });
