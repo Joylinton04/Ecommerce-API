@@ -132,3 +132,83 @@ export const placeOrderCOD = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+// user order history
+export const orderHistory = async (req, res) => {
+  const userId = req.user;
+  if (!userId)
+    return res
+      .status(404)
+      .json({ success: false, message: "No user Id token found" });
+
+  try {
+    const orders = await orderModel.find({ user: userId });
+    res.status(200).json({ success: true, orders: orders });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Internal Error" });
+  }
+};
+
+// cancel order
+export const cancelOrder = async (req, res) => {
+  const userId = req.user;
+  const { orderId } = req.body;
+  if (!orderId)
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order ID" });
+
+  try {
+    const order = await orderModel.findOne({ _id: orderId });
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "No order found" });
+
+    let cartItems = order.items;
+
+    const newCart = {
+      user: userId,
+      items: cartItems,
+    };
+
+    const cart = new cartModel(newCart);
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Restore stock for each item in the order
+      for (const item of cartItems) {
+        await productModel.findByIdAndUpdate(
+          item.productId,
+          { $inc: { stock: item.quantity } },
+          { session }
+        );
+      }
+
+      await cart.save({ session });
+      await orderModel.deleteOne({ _id: orderId }, { session });
+      await session.commitTransaction();
+      session.endSession();
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error("Transaction failed during order cancellation:", err);
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to cancel order due to a database error. Please try again.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "cancelled order successfully",
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Internal Error" });
+  }
+};
