@@ -36,7 +36,7 @@ export const addCart = async (req, res) => {
       return res.status(201).json({ success: true, cart: cart });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.product == productId);
+    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
     if (itemIndex > -1) {
       // Product exists — update quantity
       const newQuantity = cart.items[itemIndex].quantity + quantity;
@@ -112,7 +112,7 @@ export const updateCartItem = async (req, res) => {
         .json({ success: false, message: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.product == productId);
+    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
 
     if (itemIndex > -1) {
       if (quantity > product.stock) {
@@ -154,12 +154,12 @@ export const removeCartItem = async (req, res) => {
         .json({ success: false, message: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.product == productId);
+    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
     if (itemIndex === -1) {
       return res.status(404).json({ success: false, message: "Item not found in cart" });
     }
 
-    cart.items = cart.items.filter(item => item.product.toString() !== productId);
+    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
     cart.lastModified = Date.now()
     await cart.save()
 
