@@ -212,3 +212,32 @@ export const cancelOrder = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal Error" });
   }
 };
+
+// handle orderStatus
+export const handleOrderStatus = async (req, res) => {
+  const { orderId, status } = req.body;
+  if (!orderId || !status)
+    return res.status(400).json({
+      success: false,
+      message: "Order ID and status are required.",
+    });
+
+  try {
+    const order = await orderModel.findById(orderId);
+    if (!order)
+      return res.status(404).json({ success: false, message: "Order not found." });
+
+    order.orderStatus = status;
+    order.lastModified = Date.now();
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully.",
+      order: order,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+}
