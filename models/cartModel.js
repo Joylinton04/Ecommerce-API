@@ -13,6 +13,10 @@ const CartItemSchema = new Schema({
         required: true,
         min: 1
     },
+    size: {
+        type: String,
+        required: true
+    },
     price: {
         type: Number,
         required: true

@@ -225,7 +225,9 @@ export const handleOrderStatus = async (req, res) => {
   try {
     const order = await orderModel.findById(orderId);
     if (!order)
-      return res.status(404).json({ success: false, message: "Order not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found." });
 
     order.orderStatus = status;
     order.lastModified = Date.now();
@@ -238,6 +240,8 @@ export const handleOrderStatus = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ success: false, message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
   }
-}
+};

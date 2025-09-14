@@ -4,12 +4,14 @@ import productModel from "../models/productModel.js";
 export const addCart = async (req, res) => {
   //   let cart;
   const userId = req.user;
-  const { productId, quantity } = req.body;
+  const { productId, quantity, size } = req.body;
+  
   if (!productId || !quantity)
     return res.json({ sucess: false, message: "Invalid product details" });
 
   try {
     const product = await productModel.findById(productId);
+    console.log("size: ", product.sizes)
     if (!product)
       return res
         .status(404)
@@ -17,6 +19,9 @@ export const addCart = async (req, res) => {
 
     if (product.stock < quantity) {
       return res.status(400).json({ message: "Not enough stock available" });
+    }
+    if (size && !product.sizes.includes(size)) {
+      return res.status(400).json({ message: "Selected size not available" });
     }
 
     let cart = await cartModel.findOne({ user: userId });
@@ -27,6 +32,7 @@ export const addCart = async (req, res) => {
           {
             productId: productId,
             quantity: quantity,
+            size: size,
             price: product.price,
           },
         ],
