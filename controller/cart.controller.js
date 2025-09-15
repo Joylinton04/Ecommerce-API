@@ -2,75 +2,83 @@ import cartModel from "../models/cartModel.js";
 import productModel from "../models/productModel.js";
 
 export const addCart = async (req, res) => {
-  //   let cart;
   const userId = req.user;
-  const { productId, quantity, size } = req.body;
-  
-  if (!productId || !quantity)
-    return res.json({ sucess: false, message: "Invalid product details" });
+  const { items } = req.body; // Expecting: { items: [{ productId, quantity, size }, ...] }
+
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid cart payload" });
+  }
 
   try {
-    const product = await productModel.findById(productId);
-    console.log("size: ", product.sizes)
-    if (!product)
-      return res
-        .status(404)
-        .json({ sucess: false, message: "Product not found!" });
-
-    if (product.stock < quantity) {
-      return res.status(400).json({ message: "Not enough stock available" });
-    }
-    if (size && !product.sizes.includes(size)) {
-      return res.status(400).json({ message: "Selected size not available" });
-    }
-
     let cart = await cartModel.findOne({ user: userId });
     if (!cart) {
-      const newCartItem = {
-        user: userId,
-        items: [
-          {
-            productId: productId,
-            quantity: quantity,
-            size: size,
-            price: product.price,
-          },
-        ],
-      };
-      cart = new cartModel(newCartItem);
-      await cart.save();
-      return res.status(201).json({ success: true, cart: cart });
+      cart = new cartModel({ user: userId, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
-    if (itemIndex > -1) {
-      // Product exists — update quantity
-      const newQuantity = cart.items[itemIndex].quantity + quantity;
+    for (const { productId, quantity, size } of items) {
+      if (!productId || !quantity) continue; // skip invalid item
 
-      if (newQuantity > product.stock) {
+      const product = await productModel.findById(productId);
+      if (!product) continue; // skip if product not found
+
+      // Parse sizes since you stored it as stringified array
+      const availableSizes = product.sizes ? JSON.parse(product.sizes) : [];
+
+      if (size && !availableSizes.includes(size)) {
         return res.status(400).json({
           success: false,
-          message: `Cannot add more than ${product.stock} of ${product.name} to cart.`,
+          message: `Size ${size} not available for ${product.name}`,
         });
       }
 
-      cart.items[itemIndex].quantity = newQuantity;
-    } else {
-      // Product not in cart — push new item
-      cart.items.push({
-        productId: productId,
-        quantity: quantity,
-        price: product.price,
-      });
+      // Check stock
+      if (quantity > product.stock) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough stock for ${product.name}`,
+        });
+      }
+
+      // See if product already in cart
+      const itemIndex = cart.items.findIndex(
+        (item) =>
+          item.productId.toString() === productId.toString() &&
+          item.size === size
+      );
+
+      if (itemIndex > -1) {
+        // Update existing item quantity
+        const newQuantity = cart.items[itemIndex].quantity + quantity;
+        if (newQuantity > product.stock) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot add more than ${product.stock} of ${product.name}`,
+          });
+        }
+        cart.items[itemIndex].quantity = newQuantity;
+      } else {
+        // Add new item
+        cart.items.push({
+          productId,
+          quantity,
+          size,
+          price: product.price,
+        });
+      }
     }
 
     cart.lastModified = Date.now();
     await cart.save();
 
-    return res.status(200).json({ success: true, cart: cart });
+    return res.status(200).json({ success: true, cart });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -118,7 +126,9 @@ export const updateCartItem = async (req, res) => {
         .json({ success: false, message: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId == productId
+    );
 
     if (itemIndex > -1) {
       if (quantity > product.stock) {
@@ -145,36 +155,40 @@ export const clearCart = async (req, res) => {
   // const
 };
 
-
 export const removeCartItem = async (req, res) => {
   // get info from req
   const userId = req.user;
   const { productId } = req.body;
 
   try {
-    // find cart 
-    const cart = await cartModel.findOne({ user: userId})
+    // find cart
+    const cart = await cartModel.findOne({ user: userId });
     if (!cart) {
       return res
         .status(404)
         .json({ success: false, message: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.productId == productId);
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId == productId
+    );
     if (itemIndex === -1) {
-      return res.status(404).json({ success: false, message: "Item not found in cart" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found in cart" });
     }
 
-    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
-    cart.lastModified = Date.now()
-    await cart.save()
+    cart.items = cart.items.filter(
+      (item) => item.productId.toString() !== productId
+    );
+    cart.lastModified = Date.now();
+    await cart.save();
 
-    res.status(200).json({success: true, message: "Cart item removed successfully", cart})
-
-
+    res
+      .status(200)
+      .json({ success: true, message: "Cart item removed successfully", cart });
   } catch (err) {
     console.log(err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-
 };
