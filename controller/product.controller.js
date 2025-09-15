@@ -72,8 +72,7 @@ export const singleProduct = async (req, res) => {
 
   try {
     const product = await productModel.findById(id);
-    console.log(product.sizes[0])
-
+    
     if (!product) {
       return res
         .status(404)
