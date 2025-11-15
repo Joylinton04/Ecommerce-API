@@ -4,7 +4,8 @@ import { jwtCheck, verifyUser } from '../middleware/auth.middleware.js';
 
 const cartRoute = express.Router()
 
-cartRoute.post('/', jwtCheck, verifyUser,getCart)
+cartRoute.post('/',getCart)
+// cartRoute.post('/', jwtCheck, verifyUser,getCart)
 cartRoute.post('/add', jwtCheck, verifyUser,addCart)
 cartRoute.post('/update', jwtCheck, verifyUser, updateCartItem)
 cartRoute.post('/clear', jwtCheck, verifyUser, clearCart)
