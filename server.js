@@ -4,17 +4,13 @@ import connectCloudinary from "./config/cloudinary.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import productRoute from "./route/product.route.js";
-// import { jwtCheck, verifyAdmin, verifyUser } from "./middleware/auth.middleware.js";
 import cartRoute from "./route/cart.route.js";
 import orderRoute from "./route/order.route.js";
 import passport from "passport";
 import session from "express-session";
-import cookieParser from "cookie-parser";
 import auth from "./route/auth.route.js";
-import "./passport.config.js"
-
-
-
+import "./passport.config.js";
+import MongoStore from "connect-mongo";
 
 dotenv.config();
 
@@ -26,14 +22,21 @@ app.use(
     secret: process.env.SESSION_SECRET,
     saveUninitialized: false,
     resave: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.mongodb_uri,
+      ttl: 14 * 24 * 60 * 60,
+    }),
     cookie: {
-      maxAge: 6000 * 6
-    }
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: false, // set true in production (HTTPS)
+      sameSite: "lax",
+    },
   })
-)
+);
 
-app.use(passport.initialize())
-app.use(passport.session())
+app.use(passport.initialize());
+app.use(passport.session());
 
 connectDB();
 connectCloudinary();
@@ -42,12 +45,11 @@ app.use(cors({ origin: "http://localhost:5174", credentials: true }));
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/order", orderRoute);
-app.use("/auth", auth);
+app.use("/api/auth", auth);
 
 app.get("/", (req, res) => {
   res.send("API working...");
 });
-
 
 app.use((req, res, next) => {
   const error = new Error("Not found");
