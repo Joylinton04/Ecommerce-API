@@ -2,9 +2,9 @@ import cartModel from "../models/cartModel.js";
 import productModel from "../models/productModel.js";
 
 export const addCart = async (req, res) => {
-  const userId = req.user;
-  const { items } = req.body; // Expecting: { items: [{ productId, quantity, size }, ...] }
-
+  const {_id:userId} = req.user;
+  const { productId, quantity, size } = req.body; // Expecting: { items: [{ productId, quantity, size }, ...] }
+  const items = [{ productId, quantity, size }];
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res
@@ -13,10 +13,11 @@ export const addCart = async (req, res) => {
   }
 
   try {
-    let cart = await cartModel.findOne({ user: userId });
-    if (!cart) {
-      cart = new cartModel({ user: userId, items: [] });
-    }
+    let cart = await cartModel.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId, items: [] } },
+      { new: true, upsert: true }
+    );
 
     for (const { productId, quantity, size } of items) {
       if (!productId || !quantity) continue; // skip invalid item
@@ -24,8 +25,18 @@ export const addCart = async (req, res) => {
       const product = await productModel.findById(productId);
       if (!product) continue; // skip if product not found
 
-      // Parse sizes since you stored it as stringified array
-      const availableSizes = product.sizes ? JSON.parse(product.sizes) : [];
+      let availableSizes = [];
+      if (product.sizes) {
+        if (Array.isArray(product.sizes)) {
+          if (product.sizes.length === 1 && product.sizes[0].includes(",")) {
+            availableSizes = product.sizes[0].split(",");
+          } else {
+            availableSizes = product.sizes;
+          }
+        } else if (typeof product.sizes === "string") {
+          availableSizes = product.sizes.split(",");
+        }
+      }
 
       if (size && !availableSizes.includes(size)) {
         return res.status(400).json({

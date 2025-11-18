@@ -6,10 +6,10 @@ const cartRoute = express.Router()
 
 cartRoute.post('/',getCart)
 // cartRoute.post('/', jwtCheck, verifyUser,getCart)
-cartRoute.post('/add', jwtCheck, verifyUser,addCart)
-cartRoute.post('/update', jwtCheck, verifyUser, updateCartItem)
-cartRoute.post('/clear', jwtCheck, verifyUser, clearCart)
-cartRoute.post('/remove', jwtCheck, verifyUser, removeCartItem)
+cartRoute.post('/add', addCart)
+cartRoute.post('/update', updateCartItem)
+cartRoute.post('/clear', clearCart)
+cartRoute.post('/remove', removeCartItem)
 
 
 export default cartRoute;

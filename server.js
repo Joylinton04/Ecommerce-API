@@ -15,6 +15,14 @@ import MongoStore from "connect-mongo";
 dotenv.config();
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5174",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use(
@@ -29,8 +37,8 @@ app.use(
     cookie: {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24,
-      secure: false, // set true in production (HTTPS)
       sameSite: "lax",
+      secure: false,
     },
   })
 );
@@ -41,7 +49,6 @@ app.use(passport.session());
 connectDB();
 connectCloudinary();
 
-app.use(cors({ origin: "http://localhost:5174", credentials: true }));
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/order", orderRoute);
